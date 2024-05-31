@@ -4,35 +4,107 @@ export default class Player {
     walkAnimationTimer = this.WALK_ANIMATION_TIMER
     dinoRunImages = []
 
+    jumpPressed = false
+    jumpInProgress = false
+    falling = false
+    JUMP_SPEED = 0.6
+    GRAVITY = 0.4
+
     constructor(ctx, width, height, minJumpHeight, maxJumpHeight, scaleRatio) {
-        this.ctx = ctx;
-        this.canvas = ctx.canvas;
-        this.width = width;
-        this.height = height;
-        this.minJumpHeight = minJumpHeight;
-        this.maxJumpHeight = maxJumpHeight;
-        this.scaleRatio = scaleRatio;
+        this.ctx = ctx
+        this.canvas = ctx.canvas
+        this.width = width
+        this.height = height
+        this.minJumpHeight = minJumpHeight
+        this.maxJumpHeight = maxJumpHeight
+        this.scaleRatio = scaleRatio
 
-        this.x = 10 * scaleRatio;
-        console.log('canvas height:', this.canvas.height)
-        this.y = this.canvas.height - this.height - 1.5 * scaleRatio;
+        this.x = 10 * scaleRatio
+        this.y = this.canvas.height - this.height - 1.5 * scaleRatio
+        this.yStandingPosition = this.y
 
-        this.standingStillImage = new Image();
-        this.standingStillImage.src = 'images/standing_still.png';
-        this.image = this.standingStillImage;
+        this.standingStillImage = new Image()
+        this.standingStillImage.src = 'images/standing_still.png'
+        this.image = this.standingStillImage
 
-        const dinoRunImage1 = new Image();
-        dinoRunImage1.src = 'images/dino_run1.png';
+        const dinoRunImage1 = new Image()
+        dinoRunImage1.src = 'images/dino_run1.png'
 
-        const dinoRunImage2 = new Image();
-        dinoRunImage2.src = 'images/dino_run2.png';
+        const dinoRunImage2 = new Image()
+        dinoRunImage2.src = 'images/dino_run2.png'
 
-        this.dinoRunImages.push(dinoRunImage1);
-        this.dinoRunImages.push(dinoRunImage2);
+        this.dinoRunImages.push(dinoRunImage1)
+        this.dinoRunImages.push(dinoRunImage2)
+
+        // Keyboard events
+        window.removeEventListener('keydown', this.keydown) // clean up previous event listeners
+        window.removeEventListener('keyup', this.keyup)
+        window.addEventListener('keydown', this.keydown)
+        window.addEventListener('keyup', this.keyup)
+
+        // touch
+        window.removeEventListener('touchstart', this.touchstart) // clean up previous event listeners
+        window.removeEventListener('touchend', this.touchend)
+        window.addEventListener('touchstart', this.touchstart)
+        window.addEventListener('touchend', this.touchend)
+    }
+
+    keyup = (event) => {
+        if(event.code === 'Space') {
+            this.jumpPressed = false
+        }
+    }
+
+    keydown = (event) => {
+        if(event.code === 'Space') {
+            this.jumpPressed = true
+        }
+    }
+
+    touchstart = () => {
+        this.jumpPressed = true
+    }
+
+    touchend = () => {
+        this.jumpPressed = false
     }
 
     update(gameSpeed, frameTimeDelta) {
-        this.run(gameSpeed, frameTimeDelta);
+        // console.log(this.jumpPressed)
+        this.run(gameSpeed, frameTimeDelta)
+        this.jump(frameTimeDelta)
+    }
+
+    jump(frameTimeDelta) {
+        if(this.jumpPressed) {
+            console.log(this.jumpPressed)
+            this.jumpInProgress = true
+        }
+    
+        // Is a jump in progress and we're not falling?
+        if(this.jumpInProgress && !this.falling) {
+            // Are we at least jumping to min height, or are we continuing to jump to max height
+            if(this.y > this.canvas.height - this.minJumpHeight || this.y > this.canvas.height - this.maxJumpHeight && this.jumpPressed) {
+                this.y -= this.JUMP_SPEED * frameTimeDelta * this.scaleRatio 
+            }
+            else {
+                this.falling = true
+            }
+        }
+        else {
+            // Are we still falling?
+            if(this.y < this.yStandingPosition) {
+                this.y += this.GRAVITY * frameTimeDelta * this.scaleRatio
+
+                if(this.y + this.height > this.canvas.height) {
+                    this.y = this.yStandingPosition
+                }
+            }
+            else {
+                this.falling = false
+                this.jumpInProgress = false
+            }
+        }
     }
 
     run(gameSpeed, frameTimeDelta) {
