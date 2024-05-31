@@ -93,6 +93,10 @@ function clearScreen() {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 }
 
+function updateGameSpeed(frameTimeDelta) {
+    gameSpeed += GAME_SPEED_INCREMENT * frameTimeDelta
+}
+
 function reset() {
     hasAddedEventListenersForRestart = false
     gameOver = false
@@ -148,6 +152,7 @@ function gameLoop(currentTime) {
         ground.update(gameSpeed, frameTimeDelta)
         cactiController.update(gameSpeed, frameTimeDelta)
         player.update(gameSpeed, frameTimeDelta)
+        updateGameSpeed(frameTimeDelta)
     }
    
     if(!gameOver && cactiController.collideWith(player)) {
