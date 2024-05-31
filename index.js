@@ -73,6 +73,7 @@ function gameLoop(currentTime) {
 
     // Update game objects
     ground.update(gameSpeed, frameTimeDelta)
+    player.update(gameSpeed, frameTimeDelta)
 
     // Draw game objects
     player.draw();
