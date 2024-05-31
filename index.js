@@ -1,4 +1,3 @@
-console.log('Hello, world!')
 import Player from './Player.js'
 import Ground from './Ground.js'
 import CactiController from './CactiController.js'
@@ -45,6 +44,9 @@ let cactiController = null
 let scaleRatio = null
 let previousTime = null
 let gameSpeed = GAME_SPEED_START
+let gameOver = false
+let hasAddedEventListenersForRestart = false
+let waitingToStart = true
 
 function createSprites() {
     // figure out width and height of the player
@@ -91,6 +93,44 @@ function clearScreen() {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 }
 
+function reset() {
+    hasAddedEventListenersForRestart = false
+    gameOver = false
+    waitingToStart = false
+    ground.reset()
+    cactiController.reset()
+    gameSpeed = GAME_SPEED_START
+}
+
+function showGameOver() {
+    const fontSize = 70 * scaleRatio
+    ctx.font = `${fontSize}px Verdana`
+    ctx.fillStyle = 'grey'
+    const x = canvas.width / 4.5
+    const y = canvas.height / 2
+    ctx.fillText("GAME OVER", x, y)
+}
+
+function showStartGameText() {
+    const fontSize = 40 * scaleRatio
+    ctx.font = `${fontSize}px Verdana`
+    ctx.fillStyle = 'grey'
+    const x = canvas.width / 45
+    const y = canvas.height / 2
+    ctx.fillText("Tap the screen or press space to start", x, y)
+}
+
+function setUpGameReset() {
+    if(!hasAddedEventListenersForRestart) {
+        hasAddedEventListenersForRestart= true
+
+        setTimeout(() => {
+            window.addEventListener('keyup', reset, { once: true}) 
+            window.addEventListener('touchstart', reset, { once: true})
+        }, 1000)
+    }
+}
+
 function gameLoop(currentTime) {
     if(previousTime === null) {
         previousTime = currentTime
@@ -103,15 +143,31 @@ function gameLoop(currentTime) {
 
     clearScreen()
 
-    // Update game objects
-    ground.update(gameSpeed, frameTimeDelta)
-    cactiController.update(gameSpeed, frameTimeDelta)
-    player.update(gameSpeed, frameTimeDelta)
+    if(!gameOver && !waitingToStart) {
+        // Update game objects
+        ground.update(gameSpeed, frameTimeDelta)
+        cactiController.update(gameSpeed, frameTimeDelta)
+        player.update(gameSpeed, frameTimeDelta)
+    }
+   
+    if(!gameOver && cactiController.collideWith(player)) {
+        gameOver = true
+        setUpGameReset()
+    }
 
     // Draw game objects
     player.draw()
     cactiController.draw()
     ground.draw()
+
+    if(gameOver) {
+        showGameOver()
+    }
+
+    if(waitingToStart) {
+        showStartGameText()
+    }
+
 
     requestAnimationFrame(gameLoop)
 }
@@ -128,3 +184,6 @@ function getScaledRatio() {
     }
     else screenHeight / GAME_HEIGHT
 }
+
+window.addEventListener('keyup', reset, { once: true}) 
+window.addEventListener('touchstart', reset, { once: true})
