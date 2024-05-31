@@ -1,12 +1,13 @@
 import Player from './Player.js'
 import Ground from './Ground.js'
 import CactiController from './CactiController.js'
+import Score from './Score.js'
 
 const canvas = document.getElementById('game')
 const ctx = canvas.getContext('2d')
 
 const GAME_SPEED_START = 0.75 // 0.75 out of 1
-const GAME_SPEED_INCREMENT = 0.001 // 0.001 out of 1
+const GAME_SPEED_INCREMENT = 0.00001 // 0.001 out of 1
 
 const GAME_WIDTH = 800
 const GAME_HEIGHT = 200
@@ -40,6 +41,7 @@ const CACTI_CONFIG = [
 let player = null
 let ground = null
 let cactiController = null
+let score = null
 
 let scaleRatio = null
 let previousTime = null
@@ -72,6 +74,8 @@ function createSprites() {
     })
 
     cactiController = new CactiController(ctx, cactiImages, scaleRatio, GROUND_AND_CACTUS_SPEED)
+
+    score = new Score(ctx, scaleRatio)
 }
 
 function setScreen() {
@@ -103,6 +107,7 @@ function reset() {
     waitingToStart = false
     ground.reset()
     cactiController.reset()
+    score.reset()
     gameSpeed = GAME_SPEED_START
 }
 
@@ -152,18 +157,21 @@ function gameLoop(currentTime) {
         ground.update(gameSpeed, frameTimeDelta)
         cactiController.update(gameSpeed, frameTimeDelta)
         player.update(gameSpeed, frameTimeDelta)
+        score.update(frameTimeDelta)
         updateGameSpeed(frameTimeDelta)
     }
    
     if(!gameOver && cactiController.collideWith(player)) {
         gameOver = true
         setUpGameReset()
+        score.setHighScore()
     }
 
     // Draw game objects
     player.draw()
     cactiController.draw()
     ground.draw()
+    score.draw()
 
     if(gameOver) {
         showGameOver()
